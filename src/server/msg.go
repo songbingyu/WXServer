@@ -1,11 +1,12 @@
 package server
 
 import (
-    "fmt"
+    //"fmt"
     "encoding/xml"  
-    "bytes"
+    //"bytes"
     "strconv"
-    "io"
+    //"io"
+    //"github.com/golang/glog"
 )
 
 
@@ -158,111 +159,36 @@ func ( m Msg ) Precision() string {
 }
 
 
-type Replay map[string]interface{}
+type respBase struct {
 
-func (r Replay) String(key string) string {
-    if str, ok := r[key]; ok {
-        return str.(string)
-    }
-    return ""
-}
-
-
-func (r Replay) Int64(key string) int64 {
-    if val, ok := r[key]; ok {
-        switch val.(type) {
-        case string:
-            i, _ := strconv.ParseInt(val.(string), 0, 64)
-            return i
-        case int:
-            return int64(val.(int))
-        case int64:
-            return val.(int64)
-        }
-    }
-    return 0
+    ToUserName      string  
+    FromUserName    string
+    CreateTime      int64
+    MsgType         string
+     
 }
 
-func (r Replay) ToUserName() string {
-    return r.String("ToUserName")
-}
-func (r Replay) FromUserName() string {
-    return r.String("FromUserName")
-}
-func (r Replay) CreateTime() int64 {
-    return r.Int64("CreateTime")
-}
-func (r Replay) MsgType() string {
-    return r.String("MsgType")
-}
-func (r Replay) FuncFlag() int64 {
-    return r.Int64("FuncFlag")
+type RespText   struct {
+
+    XMLName     xml.Name    `xml:"xml"`
+    respBase    
+    Content     string 
 }
 
-func (r Replay) SetToUserName(val string) Replay {
-    r["ToUserName"] = val
-    return r
-}
-func (r Replay) SetFromUserName(val string) Replay {
-    r["FromUserName"] = val
-    return r
-}
-func (r Replay) SetCreateTime(val int64) Replay {
-    r["CreateTime"] = val
-    return r
-}
-func (r Replay) SetMsgType(val string) Replay {
-    r["MsgType"] = val
-    return r
-}
-func (r Replay) SetFuncFlag(val int64) Replay {
-    r["FuncFlag"] = val
-    return r
-}
+type item  struct {
 
-func (r Replay) Content() string {
-    return r.String("Content")
+  XMLName       xml.Name    `xml:"item"`
+  Title         string
+  Description   string
+  PicUrl        string
+  Url           string
+ 
 }
-func (r Replay) SetContent(val string) Replay {
-    r["Content"] = val
-    return r
-}
+type RespTextAndPic struct {
 
-func MapToXmlString(m map[string]interface{}) string {
-    buf := &bytes.Buffer{}
-    for k, v := range m {
-
-        if v != nil {
-            switch v.(type) {
-            case int:
-                io.WriteString(buf, fmt.Sprintf("<%s>", k))
-                io.WriteString(buf, fmt.Sprintf("%d", v))
-                io.WriteString(buf, fmt.Sprintf("</%s>\n", k))
-            case int64:
-                io.WriteString(buf, fmt.Sprintf("<%s>", k))
-                io.WriteString(buf, fmt.Sprintf("%d", v))
-                io.WriteString(buf, fmt.Sprintf("</%s>\n", k))
-            case string:
-                io.WriteString(buf, fmt.Sprintf("<%s>", k))
-                io.WriteString(buf, "<![CDATA["+v.(string)+"]]>")
-                io.WriteString(buf, fmt.Sprintf("</%s>\n", k))
-            case map[string]interface{}:
-                io.WriteString(buf, fmt.Sprintf("<%s>", k))
-                io.WriteString(buf, MapToXmlString(v.(map[string]interface{})))
-                io.WriteString(buf, fmt.Sprintf("</%s>\n", k))
-            case []interface{}:
-                for _, t := range v.([]interface{}) {
-                    switch t.(type) {
-                    case map[string]interface{}:
-                        io.WriteString(buf, fmt.Sprintf("<%s>", k))
-                        io.WriteString(buf, MapToXmlString(t.(map[string]interface{})))
-                        io.WriteString(buf, fmt.Sprintf("</%s>\n", k))
-                    }
-                }
-            }
-        }
-
-    }
-    return buf.String()
+    XMLName         xml.Name    `xml:"xml"`
+    respBase    
+    ArticleCount    int64       `xml:",omitempty"`
+    Articles        []item     `xml:"Articles>item,omitempty"` 
 }
 
