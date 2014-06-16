@@ -168,13 +168,35 @@ type respBase struct {
      
 }
 
+
+
+
 type RespText   struct {
 
-    XMLName     xml.Name    `xml:"xml"`
-    respBase    
+    dXMLName     xml.Name    `xml:"xml"`
+    respBase     `` 
     Content     string 
 }
 
+type Music struct {
+
+  XMLName       xml.Name    `xml:"Music"`
+  Title         string
+  Description   string
+  MusicUrl      string
+  HQMusicUrl    string
+ // ThumbMediaId  string
+
+}
+
+
+type RespMusic struct {
+
+    XMLName     xml.Name    `xml:"xml"`
+    respBase    
+    Music       Music 
+
+}
 type item  struct {
 
   XMLName       xml.Name    `xml:"item"`
@@ -191,4 +213,5 @@ type RespTextAndPic struct {
     ArticleCount    int64       `xml:",omitempty"`
     Articles        []item     `xml:"Articles>item,omitempty"` 
 }
+
 

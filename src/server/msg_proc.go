@@ -9,6 +9,7 @@ import (
     "github.com/golang/glog"
     "encoding/xml"
     "util" 
+    "strings"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
     MSG_VOICE    = "voice"
     MSG_VIDEO    = "video" 
     MSG_NEWS     = "news"
+    MSG_MUSIC    = "music"
 )
 
 const (
@@ -65,10 +67,56 @@ func ( proc MsgProc)  Proc( w http.ResponseWriter,  m * Msg ) error {
 
 
 func ( proc MsgProc ) proc_text( w http.ResponseWriter,  m *Msg )  error {
-   
-   // proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "欢迎加入万卷书屋。。") ); 
+  
+    b := strings.Contains( m.Content(), "音乐@")
+    fmt.Println(*m )
+    if b == true  {
+
+        var title string
+        var author string
+        content := strings.Trim( m.Content(), " " )
+        keys := strings.Split( content, "@" )
+        fmt.Println( m.Content(), keys ,  len(keys) ) 
+        if len(keys) == 1 {
+            proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "请输入音乐名!") ); 
+            return nil
+        }
+        
+        title = keys[1]
+        author = ""
+        if len(keys)  >= 3 {
+            author = keys[2] 
+        }
+        fmt.Println( title, author )
+ 
+        ok, musicUrl, HDMusicUrl , _:= util.SearchMusic( title, author )
+        if  ok!= nil  {
+            proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "你找的音乐不存在!") ); 
+
+            return nil
+        } 
+        
+        fmt.Println( " go......" )  
+        resp := RespMusic{}
+        resp.ToUserName = m.FromUserName()
+        resp.FromUserName =m.ToUserName() 
+        resp.CreateTime = time.Now().Unix()
+        resp.MsgType =MSG_MUSIC
+        resp.Music.MusicUrl = musicUrl
+        resp.Music.HQMusicUrl =  HDMusicUrl
+        resp.Music.Title = string( title)
+        resp.Music.Description = "百度歌曲"
+        //resp.Music.ThumbMediaId="00"
+        
+        proc.send_music( w, resp )
+        return nil 
+
+    } 
+
+
+    proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "欢迎加入万卷书屋。。") ); 
     
-    art := [] item{}
+    /*art := [] item{}
     art1 := item{}
     art1.Title = "[golang] xml解析"
     art1.Description = "golang解析xml真是好用,特别是struct属性的tag让程序简单了许多,其他变成语言需要特殊类型的在golang里直接使用tag舒服"
@@ -89,7 +137,7 @@ func ( proc MsgProc ) proc_text( w http.ResponseWriter,  m *Msg )  error {
    art = append( art ,art1 )   
    art = append( art ,art2 )   
    art = append( art ,art3 )   
-   proc.send_pic_and_text( w,m.FromUserName(), m.ToUserName(),art )
+   proc.send_pic_and_text( w,m.FromUserName(), m.ToUserName(),art )*/
    return nil
 }
 
@@ -153,6 +201,13 @@ func ( proc MsgProc ) send_text( w http.ResponseWriter, ToUserName string , From
   resp.Content = Content
   data,_ := xml.Marshal( resp )  
   SendMsg( w, data )
+}
+
+func ( proc MsgProc ) send_music( w http.ResponseWriter,  respMusic RespMusic ) {
+
+    data,_ := xml.Marshal( respMusic ) 
+    fmt.Println( string( data) ) 
+    SendMsg( w, data  )
 }
 
 

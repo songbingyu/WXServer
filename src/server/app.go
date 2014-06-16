@@ -48,7 +48,7 @@ func /*(app *App)*/  handler(w http.ResponseWriter, req *http.Request) {
 	        var signature = req.FormValue("signature");
 	        var timestamp = req.FormValue("timestamp");
 	        var nonce = req.FormValue("nonce");
-	      	var echostr = req.FormValue("echostr");
+	      	var echostr = req.FormValue("echostr")
 	     	
 	     	if CheckSignature( signature, timestamp, nonce) {
 
