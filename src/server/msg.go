@@ -173,12 +173,12 @@ type respBase struct {
 
 type RespText   struct {
 
-    dXMLName     xml.Name    `xml:"xml"`
-    respBase     `` 
+    XMLName     xml.Name    `xml:"xml"`
+    respBase      
     Content     string 
 }
 
-type Music struct {
+type MusicInfo struct {
 
   XMLName       xml.Name    `xml:"Music"`
   Title         string
@@ -194,7 +194,7 @@ type RespMusic struct {
 
     XMLName     xml.Name    `xml:"xml"`
     respBase    
-    Music       Music 
+    Music       MusicInfo 
 
 }
 type item  struct {

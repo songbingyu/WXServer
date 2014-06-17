@@ -5,6 +5,7 @@ import (
     "io/ioutil"
     "github.com/golang/glog"
     "encoding/json"
+    "fmt"
 )
 
 
@@ -84,13 +85,15 @@ func get_info ( url string ) ( b []byte ,err  error  ) {
         err = e
         return 
    }
-   
+  
+   fmt.Println(" GetResult") 
    data, e:= ioutil.ReadAll( r.Body )
    if e != nil {
         err = e
         return 
    }
     
+   fmt.Println("Get data ")
    r.Body.Close()
    
    return data, nil    

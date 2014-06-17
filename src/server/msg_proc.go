@@ -69,7 +69,7 @@ func ( proc MsgProc)  Proc( w http.ResponseWriter,  m * Msg ) error {
 func ( proc MsgProc ) proc_text( w http.ResponseWriter,  m *Msg )  error {
   
     b := strings.Contains( m.Content(), "音乐@")
-    fmt.Println(*m )
+  //  fmt.Println(*m )
     if b == true  {
 
         var title string
@@ -102,43 +102,60 @@ func ( proc MsgProc ) proc_text( w http.ResponseWriter,  m *Msg )  error {
         resp.FromUserName =m.ToUserName() 
         resp.CreateTime = time.Now().Unix()
         resp.MsgType =MSG_MUSIC
-        resp.Music.MusicUrl = musicUrl
-        resp.Music.HQMusicUrl =  HDMusicUrl
-        resp.Music.Title = string( title)
+        resp.Music.MusicUrl = strings.Trim( musicUrl," " )
+        resp.Music.HQMusicUrl = strings.Trim(  HDMusicUrl," ")
+        resp.Music.Title = title
         resp.Music.Description = "百度歌曲"
         //resp.Music.ThumbMediaId="00"
         
         proc.send_music( w, resp )
         return nil 
 
-    } 
+    }
 
+ 
+    b = strings.Contains( m.Content(), "天气@")
+    if b == true  {
 
-    proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "欢迎加入万卷书屋。。") ); 
-    
-    /*art := [] item{}
-    art1 := item{}
-    art1.Title = "[golang] xml解析"
-    art1.Description = "golang解析xml真是好用,特别是struct属性的tag让程序简单了许多,其他变成语言需要特殊类型的在golang里直接使用tag舒服"
-    art1.PicUrl = "http://a.hiphotos.baidu.com/image/pic/item/e7cd7b899e510fb37ff3361fdb33c895d0430c4b.jpg"
-    art1.Url    = "http://www.dotcoo.com/golang-xml-reader"
-    
-    art2 := item{}
-    art2.Title = "[golang] long-polling 长轮训"
-    art2.Description = "ＴＣＰ　轮训。。。"
-    art2.PicUrl = "http://att.newsmth.net/nForum/att/Nanjing/230042/3739/large"
-    art2.Url    = "http://www.dotcoo.com/golang-long-polling"
-    
-    art3 := item{}
-    art3.Title = "师兄可厉害了"
-    art3.Description = "要期末考试了让师兄帮我说说功课"
-    art3.PicUrl = "http://att.newsmth.net/nForum/att/SCU/58151/1348/large"
-    art3.Url    = "http://www.newsmth.net/nForum/#!article/SCU/58151"
-   art = append( art ,art1 )   
-   art = append( art ,art2 )   
-   art = append( art ,art3 )   
-   proc.send_pic_and_text( w,m.FromUserName(), m.ToUserName(),art )*/
-   return nil
+        var location  string
+        content := strings.Trim( m.Content(), " " )
+        keys := strings.Split( content, "@" )
+        if len(keys) == 1 {
+            proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "请输入音乐名!") ); 
+            return nil
+        }
+        
+        location = keys[1]
+        ok, weather:= util.SearchWeather( location )
+        if ok != nil {
+        
+            proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "没找到该地方。。。") ) 
+            return nil
+        }
+        
+        if  weather.Error != 0 {
+
+            proc.send_text(w,  m.FromUserName(), m.ToUserName(), string( "没找到该地方。。。") ) 
+            return nil
+            
+        } 
+   
+        items := [] item {}
+               for _,v := range weather.Results[0].Whether_data  {
+                t   := item{}
+                t.Title = v.Date +" "+ v.Weather + " "+v.Wind+" " +v.Temperature
+                t.Description =""
+                t.PicUrl = v.DayPictureUrl
+                t.Url    = v.DayPictureUrl
+                items    =append( items, t )        
+
+        }
+
+        proc.send_pic_and_text( w,m.FromUserName(), m.ToUserName(), items )
+        return nil
+    }       
+
+    return nil
 }
 
 func ( proc MsgProc ) proc_event(w http.ResponseWriter,  m *Msg )  error {
@@ -205,7 +222,8 @@ func ( proc MsgProc ) send_text( w http.ResponseWriter, ToUserName string , From
 
 func ( proc MsgProc ) send_music( w http.ResponseWriter,  respMusic RespMusic ) {
 
-    data,_ := xml.Marshal( respMusic ) 
+    //data,_ := xml.Marshal( respMusic ) 
+    data,_ := xml.MarshalIndent( respMusic,"" ," " ) 
     fmt.Println( string( data) ) 
     SendMsg( w, data  )
 }

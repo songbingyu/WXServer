@@ -7,9 +7,9 @@ import (
     "github.com/golang/glog"
     "encoding/xml"
     "fmt"
-    //"github.com/qiniu/iconv"
+     "github.com/qiniu/iconv"
     //"xml"
-    "github.com/djimenez/iconv-go"
+    //"github.com/djimenez/iconv-go"
     //"github.com/donnie4w/dom4g"
 
 )
@@ -86,10 +86,6 @@ type MusicInfo struct {
  }
 
 
-
-
-
-
 func  SearchMusic ( title string, author string  ) ( e error,  MusicUrl string, HQMusicUrl string, ThumbMediaId string )  {
 
     url := musicUrl + "title=" + title + "$$"+ author + "$$$$"
@@ -104,15 +100,22 @@ func  SearchMusic ( title string, author string  ) ( e error,  MusicUrl string, 
 
     var musicInfo  MusicInfo
    
-    data := make([]byte, len(res))
-    data = data[:]
 
+	cd, err := iconv.Open( "utf-8", "gb2312" )
+	if err != nil {
+		fmt.Println("iconv.Open failed!")
+		return
+	}
+	defer cd.Close()
 
-    _,_, ok := iconv.Convert(  res , data, "gb2312", "utf-8")
+    data := cd.ConvString( string(res ) )
+
+    /*_,_, ok := iconv.Convert(  res , data, "gb2312", "utf-8")
+    _,_, ok := iconv.Convert(  res , data )
     if ok != nil {
        e = ok 
         return
-    }
+    }*/
    
      
      
@@ -127,7 +130,7 @@ test1 := Substr(string( test ), 0 , strings.Index( string( test), "/durl>") +6  
     
 
     // err := xml.Unmarshal( [] byte ( test ), &musicInfo)
-    err := xml.Unmarshal( [] byte ( test1 ), &musicInfo)
+    err = xml.Unmarshal( [] byte ( test1 ), &musicInfo)
     if err != nil {
        
         e = err 
@@ -148,11 +151,24 @@ test1 := Substr(string( test ), 0 , strings.Index( string( test), "/durl>") +6  
     
         return
     }
-    MusicUrl = Substr( musicInfo.Url.Encode, 0, strings.LastIndex(musicInfo.Url.Encode,"/" ) +1 ) + musicInfo.Url.Decode  
-    HQMusicUrl = Substr( musicInfo.Durl.Encode, 0,strings.LastIndex(musicInfo.Durl.Encode,"/" ) +1 ) + musicInfo.Durl.Decode  
+    musicUrl := Substr( musicInfo.Url.Encode, 0, strings.LastIndex(musicInfo.Url.Encode,"/" ) +1 ) + musicInfo.Url.Decode  
+    hqMusicUrl := Substr( musicInfo.Durl.Encode, 0,strings.LastIndex(musicInfo.Durl.Encode,"/" ) +1 ) + musicInfo.Durl.Decode  
     e =nil 
     fmt.Println( MusicUrl )
     fmt.Println( HQMusicUrl )
+    cd2, err2 := iconv.Open( "gb2312", "utf8" )
+	if err2 != nil {
+		fmt.Println("iconv.Open failed!")
+		return
+	}
+	defer cd2.Close()
+
+    //绝壁一大坑
+    MusicUrl = "<![CDATA["+ musicUrl +"]]>"
+
+    HQMusicUrl ="<![CDATA["+ hqMusicUrl +"]]>"
+
+
 
     return  
 
